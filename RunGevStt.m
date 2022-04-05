@@ -16,6 +16,10 @@ if 1; %for testing
     X.nT=10000;
     X.Tim=linspace(0,1,X.nT)';
     
+    % Block length in years (e.g. X.BlcLngYrs=5 means that we are looking at 5-year maxima data)
+    % If BlcLngYrs is not defined, assume it is =1
+    X.BlcLngYrs=5;
+    
     % True parameters P0=[xi0;sgm0;mu0;]
     X.Prm0=[-0.3;1;5];       
     
@@ -46,6 +50,13 @@ if 1;
     Y.nT=size(X.Dat,1);
     Y.nB=10;
     Y.Blc=pMakCV(Y.nT,Y.nB,Y.Tim);
+    
+    % Check for existence of X.BlcLngYrs; if it exists, use it; otherwise set Y.BlcLngYrs=1
+    if isfield(X,'BlcLngYrs')==1;
+        Y.BlcLngYrs=X.BlcLngYrs;
+    else;
+        Y.BlcLngYrs=1;
+    end;
     
     clf;
     subplot(2,1,1); plot(Y.Tim, Y.Dat,'k.');
@@ -107,7 +118,6 @@ if 1;
     
 end;
 
-
 %% Return value plot
 if 1;
 
@@ -120,7 +130,7 @@ if 1;
     tXi=C.Prm(t,1);
     tSgm=C.Prm(t,2);
     tMu=C.Prm(t,3);
-    C.RV.Est(:,1)=(tSgm./tXi).*( (-log(1-1/C.RV.RtrPrd)).^(-tXi) - 1 ) + tMu; % Return value
+    C.RV.Est(:,1)=(tSgm./tXi).*( (-log(1-Y.BlcLngYrs/C.RV.RtrPrd)).^(-tXi) - 1 ) + tMu; % Return value
     C.Dgn.Prm=[mean(tXi);mean(tSgm);mean(tMu)];
             
     % Summary statistics of differences
@@ -136,21 +146,21 @@ if 1;
         tXi=X.Prm0(1);
         tSgm=X.Prm0(2);
         tMu=X.Prm0(3);
-        tRVTru=(tSgm./tXi).*( (-log(1-1/C.RV.RtrPrd)).^(-tXi) - 1 ) + tMu;
+        tRVTru=(tSgm./tXi).*( (-log(1-Y.BlcLngYrs/C.RV.RtrPrd)).^(-tXi) - 1 ) + tMu;
         plot(tRVTru*ones(2,1),[0 1]','k--','linewidth',2);
     end;
     pAxsLmt; pDflHug;
     title 'Distribution of RV [True - - -]'; 
-    xlabel 'Annual maximum value';
-    ylabel('$F_{{Annual Maximum}}$','interpreter','latex')
+    xlabel(sprintf('%g-year maximum value',Y.BlcLngYrs));
+    ylabel(sprintf('$F_{{%gYearMaximum}}$',Y.BlcLngYrs),'interpreter','latex');
     pAxsLmt; pDflHug;
     %
     subplot(2,2,2); hold on;
     plot(C.RV.Cdf(:,1),log10(1-C.RV.PrbVls),'k','linewidth',2);
     pAxsLmt; pDflHug;
     title 'Distribution of RV [True - - -]'; 
-    xlabel 'Annual maximum value';
-    ylabel('$\log_{10}(1-F_{{Annual Maximum}})$')
+    xlabel(sprintf('%g-year maximum value',Y.BlcLngYrs));
+    ylabel(sprintf('$\\log_{10}(1-F_{{%gYearMaximum}})$',Y.BlcLngYrs),'interpreter','latex');
     pAxsLmt; pDflHug;
     %
     x=(min(X.Dat):0.01:max(X.Dat))';
@@ -159,8 +169,8 @@ if 1;
     plot(x, log10(1-z),'color','r');
     plot(sort(X.Dat),log10(1-(((1:X.nT)'-0.5)/X.nT)),'ko','linewidth',2);
     title 'Diagnostic for tail (k=data, r=fit)';
-    xlabel 'Annual maximum value';
-    ylabel('$\log_{10}(1-F_{{Annual Maximum}})$')
+    xlabel(sprintf('%g-year maximum value',Y.BlcLngYrs));
+    ylabel(sprintf('$\\log_{10}(1-F_{{%gYearMaximum}})$',Y.BlcLngYrs),'interpreter','latex');
     pAxsLmt; pDflHug;
     
     pDatStm; pGI('GevStt-100YearReturnValue',2);
